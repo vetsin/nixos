@@ -1,21 +1,21 @@
 {
-  description = "nixos home-manager";
+  description = "nixos for vetsin";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
-    home-manager.url = "github:nix-community/home-manager/release-24.05";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    #home-manager.url = "github:nix-community/home-manager/release-24.05";
+    #home-manager.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... } @ inputs: let
+  outputs = { self, nixpkgs, nixpkgs-unstable, ... } @ inputs: let
     inherit (self) outputs;
     systems = [ "x86_64-linux" ];
     forAllSystems = nixpkgs.lib.genAttrs systems;
   in {
     packages = forAllSystems (system: import ./pkgs nixpkgs.legacyPackages.${system});
-
+    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
     overlays = import ./overlays {inherit inputs;};
 
     nixosModules = import ./modules/nixos;
@@ -23,7 +23,10 @@
 
     nixosConfigurations = {
       nixnuc = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
+        system = "x86_64-linux";
+        specialArgs = {
+          inherit inputs outputs;
+        };
         modules = [
           ./nixos/nixnuc.nix
         ];

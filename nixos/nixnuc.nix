@@ -2,9 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
-
-{
+{ inputs, outputs, config, pkgs, ... }: {
   imports =
     [ # Include the results of the hardware scan.
       ./nixnuc-hardware.nix
@@ -99,15 +97,17 @@
       vetsin = {
         isNormalUser = true;
         description = "vetsin";
-        extraGroups = [ "networkmanager" "wheel" ];
+        extraGroups = [ "networkmanager" "wheel" "adbusers" ];
         packages = with pkgs; [
           alacritty
           vimpager
           fzf
           silver-searcher
           discord
+          jetbrains.webstorm
           _1password-gui
           _1password
+          unstable.jetbrains.pycharm-community
         ];
         shell = pkgs.zsh;
       };
@@ -117,6 +117,7 @@
   hardware.gpgSmartcards.enable = true;
 
   programs = {
+    adb.enable = true;
 
     firefox.enable = true;
     zsh = {
@@ -157,10 +158,16 @@
     };
   };
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+  nixpkgs = {
+    overlays = [
+      outputs.overlays.unstable-packages
+    ];
+    # Allow unfree packages
+    config.allowUnfree = true;
+  };
 
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.trusted-users = [ "root" "vetsin" ];
 
   # List packages installed in system profile. To search, run:
   # $ nix search wget
@@ -176,6 +183,7 @@
     xclip
     xcolor
     wmctrl
+    unstable.devenv
     xfce.xfce4-appfinder
     xfce.xfce4-clipman-plugin
     xfce.xfce4-panel
